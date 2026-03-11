@@ -1,0 +1,1 @@
+This is a Employee management System designed with MERN Stack
