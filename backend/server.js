@@ -3,6 +3,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const authroutes = require("./routes/authRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
+const payrollRoutes = require("./routes/payrollRoutes");
+const payslipRoutes = require("./routes/payslipRoutes");
 const app = express();
 
 
@@ -18,6 +20,9 @@ app.use("/api/auth", authroutes);
 
 app.use("/api/employees", employeeRoutes);
 
+app.use("/api/payroll", payrollRoutes);
+
+app.use("/api/payslip", payslipRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
