@@ -8,12 +8,18 @@ const {
   deleteEmployee
 } = require("../controllers/employeeController");
 
-const authMiddleware = require("../middleware/authmiddleware");
+const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
-router.post("/", authMiddleware, adminMiddleware, addEmployee);
+const { employeeValidation } = require("../validators/employeeValidator");
+const validate = require("../middleware/validationMiddleware");
+
+router.post("/", authMiddleware, adminMiddleware, employeeValidation, validate, addEmployee);
+
 router.get("/", authMiddleware, adminMiddleware, getEmployee);
-router.put("/:id", authMiddleware, adminMiddleware, updateEmployee);
+
+router.put("/:id", authMiddleware, adminMiddleware, employeeValidation, validate, updateEmployee);
+
 router.delete("/:id", authMiddleware, adminMiddleware, deleteEmployee);
 
 

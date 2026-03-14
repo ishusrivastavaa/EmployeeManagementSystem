@@ -2,10 +2,10 @@ const jwt = require("jsonwebtoken");
 const Employee = require("../models/Employee");
 
 const authMiddleware = async (req, res, next) => {
-  try {
+  try{
     const token = req.header("Authorization")?.replace("Bearer ", "");
     
-    if (!token) {
+    if ( ! token ) { 
       return res.status(401).json({ message: "No token, authorization denied" });
     }
 
