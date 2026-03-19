@@ -12,12 +12,18 @@ exports.register = async(req,res)=>{
         if(userExist){
             return res.status(400).json({message:"user already exist"});
         }
+        
+        // Check if this is the first user - make them admin
+        const userCount = await Employee.countDocuments();
+        const role = userCount === 0 ? "admin" : "employee";
+        
         const hashedpassword = await bcrypt.hash(password , 10);
 
         const user = await Employee.create({
             name,
             email,
-            password:hashedpassword
+            password:hashedpassword,
+            role
         })
         res.status(201).json(
         {

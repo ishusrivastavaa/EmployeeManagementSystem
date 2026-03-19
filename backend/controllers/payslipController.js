@@ -53,7 +53,7 @@ const Payroll = require("../models/Payroll");
 // Get Payslip for logged-in employee
 exports.getMyPayslip = async (req, res) => {
   try {
-    console.log("Logged in user ID:", req.user.id);
+    //console.log("Logged in user ID:", req.user.id);
 
     const payroll = await Payroll.find({
       employeeId: req.user.id
@@ -71,7 +71,6 @@ exports.getMyPayslip = async (req, res) => {
 // Get Payslip by ID
 exports.getPayslipById = async (req, res) => {
   try {
-
     const payslip = await Payroll.findById(req.params.id)
       .populate("employeeId", "name email department designation");
 
@@ -79,6 +78,16 @@ exports.getPayslipById = async (req, res) => {
       return res.status(404).json({
         message: "Payslip not found"
       });
+    }
+
+    const currentUserId = req.user.id;
+    const currentUserRole = req.user.role;
+    const payslipEmployeeId = payslip.employeeId._id.toString();
+
+    // If admin, allow viewing any payslip
+    // If employee, only allow viewing their own payslip
+    if (currentUserRole !== "admin" && currentUserId !== payslipEmployeeId) {
+      return res.status(403).json({ message: "Access denied. You can only view your own payslip." });
     }
 
     res.json(payslip);

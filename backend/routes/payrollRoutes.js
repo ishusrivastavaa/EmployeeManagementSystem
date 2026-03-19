@@ -44,7 +44,8 @@ const router = express.Router();
 const {
   generatePayroll,
   getEmployeePayroll,
-  getAllPayroll
+  getAllPayroll,
+  updatePayroll
 } = require("../controllers/payrollController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -71,5 +72,8 @@ router.get("/:employeeId", authMiddleware, getEmployeePayroll);
 
 // Get all payroll records
 router.get("/", authMiddleware, adminMiddleware, getAllPayroll);
+
+// Update payroll (admin only)
+router.put("/:id", authMiddleware, adminMiddleware, updatePayroll);
 
 module.exports = router;
