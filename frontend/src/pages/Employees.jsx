@@ -18,7 +18,7 @@ function Employees() {
     } else {
       const user = userData ? JSON.parse(userData) : null;
       // Only allow admin to access this page
-      if (user && user.role !== "admin") {
+      if (user && user.role != "admin") {
         window.location.href = "/dashboard";
         return;
       }
@@ -28,12 +28,16 @@ function Employees() {
 
   const fetchEmployees = async () => {
     try {
+
       const res = await API.get("/employees");
       setEmployees(res.data);
       setLoading(false);
+
     } catch (err) {
+
       setError("Failed to fetch employees. Make sure you are an admin.");
       setLoading(false);
+
     }
   };
 
@@ -43,7 +47,7 @@ function Employees() {
       await API.post("/employees", formData);
       alert("Employee added successfully!");
       setShowForm(false);
-      setFormData({ name: "", email: "", password: "", role: "employee" });
+      setFormData({name: "", email: "", password: "", role: "employee"});
       fetchEmployees();
     } catch (err) {
       const errorMsg = err.response?.data?.error 
