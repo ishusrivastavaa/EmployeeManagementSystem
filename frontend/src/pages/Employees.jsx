@@ -1,179 +1,291 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+// =====================================================
+// EMPLOYEES PAGE - Simple and Easy to Understand
+// =====================================================
+
+// Import React hooks for managing state and side effects
+import { useState, useEffect } from "react";
+
+// Import navigation and API
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 
+// =====================================================
+// COMPONENT: Employees Management Page
+// =====================================================
 function Employees() {
-  const [employees, setEmployees] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", role: "employee" });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    // ------------------------------------------
+    // STEP 1: Define state variables
+    // ------------------------------------------
     
-    if (!token) {
-      window.location.href = "/";
-    } else {
-      const user = userData ? JSON.parse(userData) : null;
-      // Only allow admin to access this page
-      if (user && user.role != "admin") {
-        window.location.href = "/dashboard";
-        return;
-      }
-      fetchEmployees();
-    }
-  }, []);
+    // employees - array to store list of employees
+    const [employees, setEmployees] = useState([]);
+    
+    // showForm - boolean to show/hide the add employee form
+    const [showForm, setShowForm] = useState(false);
+    
+    // formData - object to store form input values
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        role: "employee"
+    });
+    
+    // loading - shows if data is being loaded
+    const [loading, setLoading] = useState(true);
+    
+    // error - stores error messages
+    const [error, setError] = useState("");
+    
+    // submitting - shows if form is being submitted
+    const [submitting, setSubmitting] = useState(false);
+    
+    // navigate - used to redirect to other pages
+    const navigate = useNavigate();
 
-  const fetchEmployees = async () => {
-    try {
+    // ------------------------------------------
+    // STEP 2: Run when component loads
+    // ------------------------------------------
+    useEffect(function() {
+        // Check if user is logged in and is admin
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+        
+        if (!token) {
+            // No token - redirect to login
+            navigate("/");
+        } 
+        else {
+            // Check if user is admin
+            const user = userData ? JSON.parse(userData) : null;
+            if (user && user.role !== "admin") {
+                // Not admin - redirect to dashboard
+                navigate("/dashboard");
+                return;
+            }
+            // Fetch employees list
+            fetchEmployees();
+        }
+    }, [navigate]);
 
-      const res = await API.get("/employees");
-      setEmployees(res.data);
-      setLoading(false);
+    // ------------------------------------------
+    // STEP 3: Fetch employees from server
+    // ------------------------------------------
+    const fetchEmployees = async function() {
+        try {
+            const response = await API.get("/employees");
+            setEmployees(response.data);
+            setLoading(false);
+        } 
+        catch (err) {
+            setError("Failed to fetch employees. Make sure you are an admin.");
+            setLoading(false);
+        }
+    };
 
-    } catch (err) {
+    // ------------------------------------------
+    // STEP 4: Handle form submission (Add Employee)
+    // ------------------------------------------
+    const handleSubmit = async function(e) {
+        // Prevent page refresh
+        e.preventDefault();
+        setSubmitting(true);
+        
+        try {
+            // Send data to server
+            await API.post("/employees", formData);
+            alert("Employee added successfully!");
+            
+            // Hide form and reset data
+            setShowForm(false);
+            setFormData({ name: "", email: "", password: "", role: "employee" });
+            
+            // Refresh employee list
+            fetchEmployees();
+        } 
+        catch (err) {
+            // Show error message
+            let errorMessage = "Failed to add employee";
+            if (err.response && err.response.data) {
+                if (err.response.data.error) {
+                    errorMessage = err.response.data.error.map(e => e.msg).join(", ");
+                } 
+                else if (err.response.data.message) {
+                    errorMessage = err.response.data.message;
+                }
+            }
+            alert("Error: " + errorMessage);
+        }
+        finally {
+            setSubmitting(false);
+        }
+    };
 
-      setError("Failed to fetch employees. Make sure you are an admin.");
-      setLoading(false);
+    // ------------------------------------------
+    // STEP 5: Handle delete employee
+    // ------------------------------------------
+    const handleDelete = async function(id) {
+        // Ask for confirmation
+        if (window.confirm("Are you sure you want to delete this employee?")) {
+            try {
+                // Send delete request to server
+                await API.delete("/employees/" + id);
+                alert("Employee deleted successfully!");
+                
+                // Refresh the list
+                fetchEmployees();
+            } 
+            catch (err) {
+                alert("Failed to delete employee");
+            }
+        }
+    };
 
-    }
-  };
+    // ------------------------------------------
+    // STEP 6: Render the page
+    // ------------------------------------------
+    return (
+        <div className="page-container">
+            
+            {/* Header */}
+            <div className="page-header">
+                <div>
+                    <Link to="/dashboard" className="back-link">Back</Link>
+                    <h1 className="page-title">Employees Management</h1>
+                </div>
+                
+                <button onClick={function() { setShowForm(!showForm); }} className="btn btn-primary">
+                    {showForm ? "Cancel" : "+ Add Employee"}
+                </button>
+            </div>
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await API.post("/employees", formData);
-      alert("Employee added successfully!");
-      setShowForm(false);
-      setFormData({name: "", email: "", password: "", role: "employee"});
-      fetchEmployees();
-    } catch (err) {
-      const errorMsg = err.response?.data?.error 
-        ? err.response.data.error.map(e => e.msg).join(", ") 
-        : err.response?.data?.message || "Failed to add employee";
-      alert("Failed to add employee: " + errorMsg);
-    }
-  };
+            {/* Add Employee Form */}
+            {showForm && (
+                <div className="card" style={{marginBottom: "20px"}}>
+                    <h3>Add New Employee</h3>
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px"}}>
+                            
+                            {/* Name Input */}
+                            <div className="form-group">
+                                <label className="form-label">Full Name</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Enter full name"
+                                    value={formData.name}
+                                    onChange={function(e) { 
+                                        setFormData({...formData, name: e.target.value}); 
+                                    }}
+                                    required
+                                />
+                            </div>
+                            
+                            {/* Email Input */}
+                            <div className="form-group">
+                                <label className="form-label">Email Address</label>
+                                <input
+                                    type="email"
+                                    className="form-input"
+                                    placeholder="Enter email"
+                                    value={formData.email}
+                                    onChange={function(e) { 
+                                        setFormData({...formData, email: e.target.value}); 
+                                    }}
+                                    required
+                                />
+                            </div>
+                            
+                            {/* Password Input */}
+                            <div className="form-group">
+                                <label className="form-label">Password</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Enter password"
+                                    value={formData.password}
+                                    onChange={function(e) { 
+                                        setFormData({...formData, password: e.target.value}); 
+                                    }}
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                            
+                            {/* Role Select */}
+                            <div className="form-group">
+                                <label className="form-label">Role</label>
+                                <select
+                                    className="form-select"
+                                    value={formData.role}
+                                    onChange={function(e) { 
+                                        setFormData({...formData, role: e.target.value}); 
+                                    }}
+                                >
+                                    <option value="employee">Employee</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {/* Submit Button */}
+                        <button type="submit" className="btn btn-primary" style={{marginTop: "10px"}} disabled={submitting}>
+                            {submitting ? "Adding..." : "Add Employee"}
+                        </button>
+                    </form>
+                </div>
+            )}
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        await API.delete(`/employees/${id}`);
-        alert("Employee deleted successfully!");
-        fetchEmployees();
-      } catch (err) {
-        alert("Failed to delete employee");
-      }
-    }
-  };
+            {/* Error Message */}
+            {error && <p style={{color: "red"}}>{error}</p>}
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Employees Management</h2>
-        <Link to="/dashboard">← Back to Dashboard</Link>
-      </div>
-
-      <button 
-        onClick={() => setShowForm(!showForm)}
-        style={{ padding: "10px 20px", marginBottom: "20px", background: "#28a745", color: "white", border: "none", cursor: "pointer" }}
-      >
-        {showForm ? "Cancel" : "+ Add Employee"}
-      </button>
-
-      {showForm && (
-        <form onSubmit={handleSubmit} style={{ border: "1px solid #ccc", padding: "20px", marginBottom: "20px" }}>
-          <h3>Add New Employee</h3>
-          <div style={{ marginBottom: "10px" }}>
-            <input
-              type="text"
-              placeholder="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              style={{ padding: "8px", width: "100%", marginBottom: "10px" }}
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              style={{ padding: "8px", width: "100%", marginBottom: "10px" }}
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <input
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-              style={{ padding: "8px", width: "100%", marginBottom: "10px" }}
-            />
-          </div>
-          <div style={{ marginBottom: "10px" }}>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              style={{ padding: "8px", width: "100%", marginBottom: "10px" }}
-            >
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <button type="submit" style={{ padding: "10px 20px", background: "#28a745", color: "white", border: "none", cursor: "pointer" }}>
-            Submit
-          </button>
-        </form>
-      )}
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <h3>Employee List ({employees.length})</h3>
-          {employees.length === 0 ? (
-            <p>No employees found.</p>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
-                  <th style={{ padding: "10px", border: "1px solid #ddd" }}>Name</th>
-                  <th style={{ padding: "10px", border: "1px solid #ddd" }}>Email</th>
-                  <th style={{ padding: "10px", border: "1px solid #ddd" }}>Role</th>
-                  <th style={{ padding: "10px", border: "1px solid #ddd" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((emp) => (
-                  <tr key={emp._id}>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>{emp.name}</td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>{emp.email}</td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>{emp.role}</td>
-                    <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                      <button
-                        onClick={() => handleDelete(emp._id)}
-                        style={{ padding: "5px 10px", background: "#dc3545", color: "white", border: "none", cursor: "pointer" }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+            {/* Employee List */}
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                <div className="card">
+                    <h3>Employee List ({employees.length})</h3>
+                    
+                    {employees.length === 0 ? (
+                        <p>No employees found.</p>
+                    ) : (
+                        <table style={{width: "100%", borderCollapse: "collapse"}}>
+                            <thead>
+                                <tr style={{background: "#f8f9fa", textAlign: "left"}}>
+                                    <th style={{padding: "10px", border: "1px solid #ddd"}}>Name</th>
+                                    <th style={{padding: "10px", border: "1px solid #ddd"}}>Email</th>
+                                    <th style={{padding: "10px", border: "1px solid #ddd"}}>Role</th>
+                                    <th style={{padding: "10px", border: "1px solid #ddd"}}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {employees.map(function(emp) {
+                                    return (
+                                        <tr key={emp._id}>
+                                            <td style={{padding: "10px", border: "1px solid #ddd"}}>{emp.name}</td>
+                                            <td style={{padding: "10px", border: "1px solid #ddd"}}>{emp.email}</td>
+                                            <td style={{padding: "10px", border: "1px solid #ddd"}}>
+                                                <span className={"badge " + (emp.role === "admin" ? "badge-admin" : "badge-employee")}>
+                                                    {emp.role}
+                                                </span>
+                                            </td>
+                                            <td style={{padding: "10px", border: "1px solid #ddd"}}>
+                                                <button onClick={function() { handleDelete(emp._id); }} className="btn btn-danger btn-sm">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
+// Export this component to be used in other files
 export default Employees;

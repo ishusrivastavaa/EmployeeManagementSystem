@@ -1,84 +1,147 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import API from "../services/api";
+// =====================================================
+// DASHBOARD PAGE - Simple and Easy to Understand
+// =====================================================
 
+// Import React hooks for managing state and side effects
+import { useState, useEffect } from "react";
+
+// Import navigation
+import { Link, useNavigate } from "react-router-dom";
+
+// =====================================================
+// COMPONENT: Dashboard (Main Home Page)
+// =====================================================
 function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ employees: 0, payrolls: 0, payslips: 0 });
+    // ------------------------------------------
+    // STEP 1: Define state variables
+    // ------------------------------------------
+    // user - stores the logged in user's information
+    const [user, setUser] = useState(null);
+    
+    // navigate - used to redirect to other pages
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/";
-    } else {
-      // Try to get user info from login response stored in localStorage
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
-    }
-  }, []);
+    // ------------------------------------------
+    // STEP 2: Run when component loads
+    // ------------------------------------------
+    useEffect(function() {
+        // Check if user is logged in
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+            // No token - redirect to login
+            navigate("/");
+        } 
+        else {
+            // Get user data from storage
+            const userData = localStorage.getItem("user");
+            if (userData) {
+                setUser(JSON.parse(userData));
+            }
+        }
+    }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/";
-  };
+    // ------------------------------------------
+    // STEP 3: Handle logout
+    // ------------------------------------------
+    const handleLogout = function() {
+        // Clear stored data
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        
+        // Redirect to login page
+        navigate("/");
+    };
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Dashboard</h2>
-        <button onClick={handleLogout} style={{ padding: "10px 20px", background: "#dc3545", color: "white", border: "none", cursor: "pointer" }}>
-          Logout
-        </button>
-      </div>
-      
-      <p>Welcome to the Payroll Management System</p>
-      
-      {user && (
-        <p style={{ color: "#666" }}>Logged in as: {user.name} ({user.role})</p>
-      )}
-      
-      {/* Admin Dashboard */}
-      {user?.role === "admin" && (
-        <div style={{ display: "flex", gap: "20px", marginTop: "30px", flexWrap: "wrap" }}>
-          <Link to="/employees" style={{ textDecoration: "none" }}>
-            <div style={{ border: "1px solid #ccc", padding: "30px", minWidth: "200px", cursor: "pointer", background: "#f8f9fa" }}>
-              <h3>Employees</h3>
-              <p>Manage employee records</p>
+    // ------------------------------------------
+    // STEP 4: Render the dashboard
+    // ------------------------------------------
+    return (
+        <div className="page-container">
+            
+            {/* Header with user info and logout button */}
+            <div className="dashboard-header">
+                <div>
+                    <h1 className="page-title">Dashboard</h1>
+                    <p>Payroll Management System</p>
+                </div>
+                
+                <div>
+                    {/* Show user name and role */}
+                    {user && (
+                        <span>
+                            Welcome, <strong>{user.name}</strong> ({user.role})
+                        </span>
+                    )}
+                    
+                    {/* Logout button */}
+                    <button onClick={handleLogout} className="btn btn-danger" style={{marginLeft: "10px"}}>
+                        Logout
+                    </button>
+                </div>
             </div>
-          </Link>
-          
-          <Link to="/payroll" style={{ textDecoration: "none" }}>
-            <div style={{ border: "1px solid #ccc", padding: "30px", minWidth: "200px", cursor: "pointer", background: "#f8f9fa" }}>
-              <h3>Payroll</h3>
-              <p>Generate and manage payroll</p>
+
+            {/* Welcome Message */}
+            <div className="welcome-section">
+                <h2>Welcome back, {user?.name || 'User'}!</h2>
+                <p>Here's what you can do:</p>
             </div>
-          </Link>
-          
-          <Link to="/payslips" style={{ textDecoration: "none" }}>
-            <div style={{ border: "1px solid #ccc", padding: "30px", minWidth: "200px", cursor: "pointer", background: "#f8f9fa" }}>
-              <h3>Payslips</h3>
-              <p>View all employees' payslips</p>
+
+            {/* ------------------------------------------
+            STEP 5: Show different options based on user role
+            ------------------------------------------ */}
+            
+            {/* If user is admin, show admin options */}
+            {user?.role === "admin" && (
+                <div className="quick-actions">
+                    <h3>Admin Options</h3>
+                    
+                    <div className="action-grid">
+                        {/* Link to Manage Employees */}
+                        <Link to="/employees" className="action-card">
+                            <h4>Manage Employees</h4>
+                            <p>Add, view, or remove employees</p>
+                        </Link>
+                        
+                        {/* Link to Generate Payroll */}
+                        <Link to="/payroll" className="action-card">
+                            <h4>Generate Payroll</h4>
+                            <p>Create and manage payroll records</p>
+                        </Link>
+                        
+                        {/* Link to View Payslips */}
+                        <Link to="/payslips" className="action-card">
+                            <h4>View Payslips</h4>
+                            <p>View all employee payslips</p>
+                        </Link>
+                    </div>
+                </div>
+            )}
+
+            {/* If user is employee, show employee options */}
+            {user?.role === "employee" && (
+                <div className="quick-actions">
+                    <h3>Employee Options</h3>
+                    
+                    <div className="action-grid">
+                        {/* Link to View Payslips */}
+                        <Link to="/payslips" className="action-card">
+                            <h4>My Payslips</h4>
+                            <p>View your payslip history</p>
+                        </Link>
+                    </div>
+                </div>
+            )}
+
+            {/* Help Section */}
+            <div className="card" style={{marginTop: "20px"}}>
+                <h3>Need Help?</h3>
+                <p>Contact your administrator for any queries about payroll or employee management.</p>
             </div>
-          </Link>
+
         </div>
-      )}
-      
-      {/* Employee Dashboard */}
-      {user?.role === "employee" && (
-        <div style={{ display: "flex", gap: "20px", marginTop: "30px", flexWrap: "wrap" }}>
-          <Link to="/payslips" style={{ textDecoration: "none" }}>
-            <div style={{ border: "1px solid #ccc", padding: "30px", minWidth: "200px", cursor: "pointer", background: "#f8f9fa" }}>
-              <h3>My Payslips</h3>
-              <p>View your own payslips</p>
-            </div>
-          </Link>
-        </div>
-      )}
-    </div>
-  );
+    );
 }
 
+// Export this component to be used in other files
 export default Dashboard;

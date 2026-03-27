@@ -1,90 +1,182 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+// =====================================================
+// PAYSLIPS PAGE - Simple and Easy to Understand
+// =====================================================
+
+// Import React hooks for managing state and side effects
+import { useState, useEffect } from "react";
+
+// Import navigation and API
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 
+// List of month names
+const monthsList = [
+    "", "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+];
+
+// =====================================================
+// COMPONENT: Payslips Page
+// =====================================================
 function Payslips() {
-  const [payslips, setPayslips] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    // ------------------------------------------
+    // STEP 1: Define state variables
+    // ------------------------------------------
     
-    if (!token) {
-      window.location.href = "/";
-    } else {
-      const parsedUser = userData ? JSON.parse(userData) : null;
-      setUser(parsedUser);
-      fetchPayslips(parsedUser);
-    }
-  }, []);
+    // payslips - array to store list of payslips
+    const [payslips, setPayslips] = useState([]);
+    
+    // loading - shows if data is being loaded
+    const [loading, setLoading] = useState(true);
+    
+    // user - stores the logged in user's information
+    const [user, setUser] = useState(null);
+    
+    // navigate - used to redirect to other pages
+    const navigate = useNavigate();
 
-  const fetchPayslips = async (currentUser) => {
-    try {
-      // Check user role - if admin, fetch all payslips, else fetch own payslips
-      if (currentUser && currentUser.role === "admin") {
-        const res = await API.get("/payslips");
-        setPayslips(res.data);
-      } else {
-        const res = await API.get("/payslips/my");
-        setPayslips(res.data);
-      }
-    } catch (err) {
-      console.error("Error fetching payslips:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ------------------------------------------
+    // STEP 2: Run when component loads
+    // ------------------------------------------
+    useEffect(function() {
+        // Check if user is logged in
+        const token = localStorage.getItem("token");
+        const userData = localStorage.getItem("user");
+        
+        if (!token) {
+            // No token - redirect to login
+            navigate("/");
+        } 
+        else {
+            // Get user data
+            const parsedUser = userData ? JSON.parse(userData) : null;
+            setUser(parsedUser);
+            
+            // Fetch payslips
+            fetchPayslips(parsedUser);
+        }
+    }, [navigate]);
 
-  const getMonthName = (month) => {
-    const months = ["", "January", "February", "March", "April", "May", "June", 
-                    "July", "August", "September", "October", "November", "December"];
-    return months[parseInt(month)] || month;
-  };
+    // ------------------------------------------
+    // STEP 3: Fetch payslips from server
+    // ------------------------------------------
+    const fetchPayslips = async function(currentUser) {
+        try {
+            // If admin, get all payslips
+            if (currentUser && currentUser.role === "admin") {
+                const response = await API.get("/payslips");
+                setPayslips(response.data);
+            } 
+            // If employee, get only their payslips
+            else {
+                const response = await API.get("/payslips/my");
+                setPayslips(response.data);
+            }
+        } 
+        catch (err) {
+            // Log error but continue (shows empty state)
+            console.error("Error fetching payslips:", err);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2>Payslips</h2>
-        <Link to="/dashboard">← Back to Dashboard</Link>
-      </div>
+    // ------------------------------------------
+    // STEP 4: Get month name from value
+    // ------------------------------------------
+    const getMonthName = function(monthValue) {
+        // Convert month value to number and get name from array
+        return monthsList[parseInt(monthValue)] || monthValue;
+    };
 
-      {user && (
-        <p style={{ color: "#666", marginBottom: "20px" }}>
-          Viewing as: {user.name} ({user.role})
-        </p>
-      )}
+    // ------------------------------------------
+    // STEP 5: Format currency
+    // ------------------------------------------
+    const formatCurrency = function(amount) {
+        // Format number as USD currency
+        return "$" + Number(amount).toLocaleString();
+    };
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <h3>Payslip Records ({payslips.length})</h3>
-          {payslips.length === 0 ? (
-            <p>No payslip records found. Generate payroll first to create payslips.</p>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
-              {payslips.map((payslip) => (
-                <div key={payslip._id} style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "8px" }}>
-                  <h4 style={{ marginTop: 0 }}>{getMonthName(payslip.month)} {payslip.year}</h4>
-                  <p><strong>Employee:</strong> {payslip.employeeId?.name || "Unknown"}</p>
-                  <p><strong>Email:</strong> {payslip.employeeId?.email || "N/A"}</p>
-                  <hr style={{ margin: "10px 0" }} />
-                  <p><strong>Salary:</strong> ${payslip.salary}</p>
-                  <p><strong>Deductions:</strong> ${payslip.deductions || 0}</p>
-                  <p><strong>Bonuses:</strong> ${payslip.bonuses || 0}</p>
-                  <p style={{ fontSize: "18px", fontWeight: "bold", color: "#28a745" }}>
-                    Net Salary: ${payslip.netSalary}
-                  </p>
+    // ------------------------------------------
+    // STEP 6: Render the page
+    // ------------------------------------------
+    return (
+        <div className="page-container">
+            
+            {/* Header */}
+            <div className="page-header">
+                <div>
+                    <Link to="/dashboard" className="back-link">Back</Link>
+                    <h1 className="page-title">
+                        {user?.role === "admin" ? "All Payslips" : "My Payslips"}
+                    </h1>
                 </div>
-              ))}
+                
+                {/* Show user info */}
+                {user && (
+                    <div>
+                        <span>{user.name}</span>
+                        <span className={"badge " + (user.role === "admin" ? "badge-admin" : "badge-employee")} style={{marginLeft: "10px"}}>
+                            {user.role}
+                        </span>
+                    </div>
+                )}
             </div>
-          )}
+
+            {/* Loading State */}
+            {loading ? (
+                <p>Loading...</p>
+            ) : 
+            
+            // If no payslips, show empty state
+            payslips.length === 0 ? (
+                <div className="card">
+                    <h4>No Payslip Records Found</h4>
+                    <p>
+                        {user?.role === "admin" 
+                            ? "No payroll has been generated yet. Go to Payroll to generate payslips."
+                            : "Your payslips will appear here once payroll is generated by your administrator."
+                        }
+                    </p>
+                    <Link to={user?.role === "admin" ? "/payroll" : "/dashboard"} className="btn btn-primary" style={{marginTop: "10px"}}>
+                        {user?.role === "admin" ? "Go to Payroll" : "Back to Dashboard"}
+                    </Link>
+                </div>
+            ) : (
+                
+            // Show payslip list
+            <div>
+                <p style={{marginBottom: "15px"}}>
+                    <strong>{payslips.length}</strong> {payslips.length === 1 ? "Payslip" : "Payslips"} found
+                </p>
+                
+                {/* Display each payslip as a card */}
+                {payslips.map(function(payslip) {
+                    return (
+                        <div key={payslip._id} className="card" style={{marginBottom: "15px"}}>
+                            <h4>{getMonthName(payslip.month)} {payslip.year}</h4>
+                            
+                            <div style={{marginTop: "10px"}}>
+                                <p><strong>Employee:</strong> {payslip.employeeId?.name || "Unknown"}</p>
+                                <p><strong>Email:</strong> {payslip.employeeId?.email || "N/A"}</p>
+                                <hr />
+                                <p><strong>Basic Salary:</strong> {formatCurrency(payslip.salary)}</p>
+                                <p style={{color: "red"}}><strong>Deductions:</strong> -{formatCurrency(payslip.deductions || 0)}</p>
+                                <p style={{color: "green"}}><strong>Bonuses:</strong> +{formatCurrency(payslip.bonuses || 0)}</p>
+                                <hr />
+                                <p style={{fontSize: "18px", fontWeight: "bold"}}>
+                                    <strong>Net Salary:</strong> {formatCurrency(payslip.netSalary)}
+                                </p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
+// Export this component to be used in other files
 export default Payslips;

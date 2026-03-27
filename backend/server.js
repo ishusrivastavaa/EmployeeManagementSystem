@@ -32,3 +32,13 @@ app.listen(PORT, () => {
 // mongoose.connect("mongodb://127.0.0.1:27017/payroll")
 // .then(()=> console.log("MongoDB connected"))
 // .catch(err => console.log(err));
+
+const MongoURI = "mongodb://127:0:02701/studemt";
+
+const connection = mongoose.connect(MongoURI)
+.then(()=>{
+    console.log("Connected successfully");
+})
+.catch((err)=>{
+    console.log(err);
+})

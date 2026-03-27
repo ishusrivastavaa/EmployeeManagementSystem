@@ -1,4 +1,3 @@
-
 // Step 3 Employee Management APIs
 
 // Here Admin should be able to :-
@@ -15,11 +14,18 @@
 // models/Employee.js  (already exists)
 
 const Employee = require("../models/Employee");
+const Payroll = require("../models/Payroll");
+const bcrypt = require("bcryptjs");
 
 // Add Employee
 exports.addEmployee = async(req , res)=>{
   try{
-    const employee = await Employee.create(req.body);
+    const { password } = req.body;
+    const hashedpassword = await bcrypt.hash(password , 10);
+    const employee = await Employee.create({
+      ...req.body,
+      password: hashedpassword
+    });
     res.status(201).json({message:"Employee Added Successfully",employee});
   }
   catch(error){
@@ -47,7 +53,7 @@ exports.updateEmployee=async(req,res)=>{
     req.body,
     {new:true}
   );
-    res.json(employee);
+  res.json(employee);
 
   }
   catch(error){
@@ -59,13 +65,19 @@ exports.updateEmployee=async(req,res)=>{
 
 exports.deleteEmployee = async(req,res)=>{
   try{
-    await Employee.findByIdAndDelete(req.params.id);
+    const employeeId = req.params.id;
+    
+    // Delete payroll/payslip records associated with this employee
+    await Payroll.deleteMany({ employeeId: employeeId });
+    
+    // Delete the employee
+    await Employee.findByIdAndDelete(employeeId);
+    
     res.json({
-      message:"Employee Deleted"
+      message:"Employee and related payroll/payslips deleted successfully"
     })
   }
   catch(error){
     res.status(500).json({error:error.message});
   }
 };
-
