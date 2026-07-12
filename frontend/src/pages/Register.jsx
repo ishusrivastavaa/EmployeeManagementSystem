@@ -1,157 +1,168 @@
-// =====================================================
-// REGISTER PAGE - Simple and Easy to Understand
-// =====================================================
-
-// Import React hooks for managing state
-import { useState } from "react";
-
-// Import navigation and API services
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 
-// =====================================================
-// COMPONENT: Registration Form
-// =====================================================
 function Register() {
-    // ------------------------------------------
-    // STEP 1: Define state variables
-    // ------------------------------------------
-    // name - stores the user's full name
-    const [name, setName] = useState("");
-    
-    // email - stores the user's email address
-    const [email, setEmail] = useState("");
-    
-    // password - stores the user's password
-    const [password, setPassword] = useState("");
-    
-    // loading - shows if form is being submitted
-    const [loading, setLoading] = useState(false);
-    
-    // navigate - used to redirect to other pages
-    const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
-    // ------------------------------------------
-    // STEP 2: Handle form submission
-    // ------------------------------------------
-    const handleSubmit = async function(e) {
-        // Prevent default form behavior (page refresh)
-        e.preventDefault();
-        
-        // Set loading to true while processing
-        setLoading(true);
+  const handleSubmit = async function (e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
-        try {
-            // Send registration request to backend
-            await API.post("/auth/register", {
-                name: name,
-                email: email,
-                password: password
-            });
+    try {
+      await API.post("/auth/register", {
+        name: name,
+        email: email,
+        password: password,
+      });
 
-            // Show success message
-            alert("Registration successful! Please login.");
-            
-            // Redirect to login page
-            navigate("/");
-        } 
-        catch (error) {
-            // Handle errors - show user-friendly message
-            let errorMessage = "Registration failed. Please try again.";
-            
-            // Check if we have validation errors from server
-            if (error.response && error.response.data) {
-                if (error.response.data.error) {
-                    // Get all validation error messages
-                    errorMessage = error.response.data.error.map(err => err.msg).join(", ");
-                } 
-                else if (error.response.data.message) {
-                    errorMessage = error.response.data.message;
-                }
-            }
-            
-            // Show error to user
-            alert(errorMessage);
+      setSuccess("Account created successfully! Redirecting to login...");
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    } catch (err) {
+      let errorMessage = "Registration failed. Please try again.";
+      if (err.response && err.response.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error.map((e) => e.msg).join(", ");
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
         }
-        finally {
-            // Set loading back to false
-            setLoading(false);
-        }
-    };
+      }
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // ------------------------------------------
-    // STEP 3: Render the registration form
-    // ------------------------------------------
-    return (
-        <div className="auth-container">
-            <div className="auth-card">
-                {/* Header Section */}
-                <div className="auth-header">
-                    <h1 className="auth-title">Create Account</h1>
-                    <p className="auth-subtitle">Join the Payroll System</p>
-                </div>
-
-                {/* Registration Form */}
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    
-                    {/* Name Input */}
-                    <div className="form-group">
-                        <label className="form-label">Full Name</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Enter your full name"
-                            value={name}
-                            onChange={function(e) { setName(e.target.value); }}
-                            required
-                        />
-                    </div>
-
-                    {/* Email Input */}
-                    <div className="form-group">
-                        <label className="form-label">Email Address</label>
-                        <input
-                            type="email"
-                            className="form-input"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={function(e) { setEmail(e.target.value); }}
-                            required
-                        />
-                    </div>
-
-                    {/* Password Input */}
-                    <div className="form-group">
-                        <label className="form-label">Password</label>
-                        <input
-                            type="password"
-                            className="form-input"
-                            placeholder="Create a password (min 6 characters)"
-                            value={password}
-                            onChange={function(e) { setPassword(e.target.value); }}
-                            required
-                            minLength={6}
-                        />
-                    </div>
-
-                    {/* Submit Button */}
-                    <button 
-                        type="submit" 
-                        className="btn btn-primary"
-                        disabled={loading}
-                    >
-                        {loading ? "Creating Account..." : "Create Account"}
-                    </button>
-                </form>
-
-                {/* Footer - Link to Login */}
-                <div className="auth-footer">
-                    <p>Already have an account? <Link to="/">Sign In</Link></p>
-                </div>
-            </div>
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        {/* Header Section */}
+        <div className="auth-header">
+          <div className="auth-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: "1.75rem", height: "1.75rem" }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235A8.902 8.902 0 0 1 9 18a8.902 8.902 0 0 1 6 1.235c0 .373-.207.728-.53 1.004l-.233.197H3.763l-.233-.197A1.396 1.396 0 0 1 3 19.235Z" />
+            </svg>
+          </div>
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-subtitle">Get started with the Payroll System</p>
         </div>
-    );
+
+        {/* Success / Error Alerts */}
+        {error && (
+          <div 
+            style={{
+              backgroundColor: "var(--danger-light)",
+              color: "var(--danger)",
+              padding: "0.75rem 1rem",
+              borderRadius: "var(--radius-md)",
+              fontSize: "0.85rem",
+              marginBottom: "1.25rem",
+              border: "1px solid rgba(239, 68, 68, 0.15)",
+              fontWeight: "500",
+              textAlign: "left"
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div 
+            style={{
+              backgroundColor: "var(--success-light)",
+              color: "var(--success)",
+              padding: "0.75rem 1rem",
+              borderRadius: "var(--radius-md)",
+              fontSize: "0.85rem",
+              marginBottom: "1.25rem",
+              border: "1px solid rgba(16, 185, 129, 0.15)",
+              fontWeight: "500",
+              textAlign: "left"
+            }}
+          >
+            {success}
+          </div>
+        )}
+
+        {/* Registration Form */}
+        <form className="auth-form" onSubmit={handleSubmit}>
+          {/* Name Input */}
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Email Input */}
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input
+              type="email"
+              className="form-input"
+              placeholder="john.doe@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Password Input */}
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-input"
+              placeholder="Min. 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ marginTop: "0.5rem", width: "100%" }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="spinner" style={{ width: "16px", height: "16px", borderWidth: "2px", borderTopColor: "white", marginRight: "6px" }}></div>
+                Creating account...
+              </>
+            ) : (
+              "Sign Up"
+            )}
+          </button>
+        </form>
+
+        {/* Footer - Link to Login */}
+        <div className="auth-footer">
+          <p>
+            Already have an account? <Link to="/" style={{ fontWeight: "600" }}>Sign In</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// Export this component to be used in other files
 export default Register;

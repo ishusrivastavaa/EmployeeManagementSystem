@@ -11,4 +11,14 @@ const loginValidation = [
     body("password").notEmpty().withMessage("Password is required")
 ];
 
-module.exports = { registerValidation, loginValidation };
+const forgotPasswordValidation = [
+    body("email").isEmail().withMessage("Valid email is required")
+];
+
+const resetPasswordOTPValidation = [
+    body("email").isEmail().withMessage("Valid email is required"),
+    body("otp").isLength({ min: 6, max: 6 }).withMessage("OTP must be exactly 6 digits"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters")
+];
+
+module.exports = { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordOTPValidation };

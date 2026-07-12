@@ -48,12 +48,19 @@ exports.getEmployee=async(req,res)=>{
 
 exports.updateEmployee=async(req,res)=>{
   try{
+    const updateData = { ...req.body };
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    } else {
+      delete updateData.password;
+    }
+
     const employee = await Employee.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {new:true}
-  );
-  res.json(employee);
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    res.json(employee);
 
   }
   catch(error){

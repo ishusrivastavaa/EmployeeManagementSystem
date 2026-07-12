@@ -21,6 +21,24 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     enum: ["admin", "employee"],
     default: "employee"
+  },
+
+  department: {
+    type: String,
+    default: ""
+  },
+
+  designation: {
+    type: String,
+    default: ""
+  },
+
+  resetOTP: {
+    type: String
+  },
+
+  resetOTPExpires: {
+    type: Date
   }
 
 }, { timestamps: true });

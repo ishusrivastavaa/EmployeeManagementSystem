@@ -36,12 +36,14 @@ EMP (Employee Management System)
 ### Admin Capabilities
 - ✅ Add new employees
 - ✅ View all employees
-- ✅ Update employee information
+- ✅ Update employee information (via Edit Modal)
+- ✅ Support for Employee Department & Designation fields
 - ✅ Delete employees
 - ✅ Generate payroll for employees
 - ✅ View all payroll records
 - ✅ Edit/Modify existing payroll
 - ✅ View all employees' payslips
+- ✅ Forgot & Reset Password Flow via 6-digit OTP verification
 
 ### Employee Capabilities
 - ✅ View own payslips
@@ -58,6 +60,7 @@ EMP (Employee Management System)
 - **JSON Web Tokens (JWT)** - Authentication
 - **bcryptjs** - Password hashing
 - **express-validator** - Input validation
+- **Nodemailer** - Email delivery service (for OTP)
 
 ### Frontend
 - **React** - UI library
@@ -99,6 +102,12 @@ EMP (Employee Management System)
    PORT=5000
    MONGO_URI=mongodb://127.0.0.1:27017/payroll
    JWT_SECRET=your-secret-key
+
+   # SMTP Mail Server Configuration (for Password Reset OTP)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_app_password
    ```
 
 2. **Start MongoDB** (if using local)
@@ -129,6 +138,8 @@ EMP (Employee Management System)
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Register new user |
 | POST | `/api/auth/login` | Login user |
+| POST | `/api/auth/forgot-password` | Generate & send 6-digit OTP to user |
+| POST | `/api/auth/reset-password-otp` | Verify OTP and reset password |
 
 ### Employees
 | Method | Endpoint | Description |
@@ -203,7 +214,8 @@ This project is for educational purposes.
 
 ## 👨‍💻 Author
 
-Created with MERN Stack
+**Ishu Srivastava**
+- B.Tech Computer Science Engineering (GLA University)
 
 ## 🙏 Acknowledgments
 
